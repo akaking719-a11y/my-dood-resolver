@@ -9,54 +9,40 @@ app.get('/', (req, res) => {
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Premium Ad-Free Player</title>
+            <title>Universal Dood Resolver</title>
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <style>
-                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-                .container { width: 95%; max-width: 500px; background: #1e1e1e; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); text-align: center; border: 1px solid #333; }
-                h2 { color: #ff4500; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
-                input { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #444; background: #111; color: #fff; margin-bottom: 20px; box-sizing: border-box; font-size: 14px; outline: none; }
-                input:focus { border-color: #ff4500; }
-                button { width: 100%; padding: 15px; background: #ff4500; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; transition: all 0.3s ease; }
-                button:hover { background: #e63e00; transform: translateY(-2px); }
-                #player-container { margin-top: 25px; width: 100%; display: none; border-radius: 10px; overflow: hidden; border: 2px solid #333; }
-                iframe { width: 100%; height: 300px; border: none; background: #000; }
-                .footer-text { margin-top: 15px; font-size: 11px; color: #666; }
+                body { font-family: sans-serif; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+                .box { width: 90%; max-width: 500px; background: #111; padding: 25px; border-radius: 12px; border: 1px solid #333; text-align: center; }
+                input { width: 100%; padding: 15px; border-radius: 5px; border: 1px solid #444; background: #222; color: #fff; margin-bottom: 15px; box-sizing: border-box; }
+                button { width: 100%; padding: 15px; background: #ff4500; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+                #v-player { margin-top: 20px; width: 100%; display: none; }
+                iframe { width: 100%; height: 300px; border: 1px solid #444; }
             </style>
         </head>
         <body>
-            <div class="container">
-                <h2>Dood Resolver</h2>
-                <input type="text" id="doodLink" placeholder="Paste Doodstream or MyVidPlay link here...">
-                <button onclick="playVideo()">WATCH NOW (NO ADS)</button>
-                <div id="player-container">
-                    <iframe id="videoPlayer" src="" allowfullscreen scrolling="no"></iframe>
+            <div class="box">
+                <h2 style="color:#ff4500">DOOD RESOLVER</h2>
+                <input type="text" id="urlInput" placeholder="Paste any Doodstream/MyVidPlay link...">
+                <button onclick="resolveNow()">GET AD-FREE VIDEO</button>
+                <div id="v-player">
+                    <iframe id="iframePlayer" src="" allowfullscreen></iframe>
                 </div>
-                <p class="footer-text">Works with all Doodstream extensions (myvidplay, dood.li, etc.)</p>
             </div>
             <script>
-                function playVideo() {
-                    let input = document.getElementById('doodLink').value.trim();
-                    if(!input) return alert('Link toh dalo!');
+                function resolveNow() {
+                    let val = document.getElementById('urlInput').value.trim();
+                    if(!val) return alert('Link dalo!');
 
-                    // Advanced ID Extraction (Sab domains ke liye)
-                    let fileId = "";
-                    if (input.includes('/e/')) {
-                        fileId = input.split('/e/')[1].split(/[?#]/)[0];
-                    } else if (input.includes('/d/')) {
-                        fileId = input.split('/d/')[1].split(/[?#]/)[0];
-                    } else if (input.includes('/v/')) {
-                        fileId = input.split('/v/')[1].split(/[?#]/)[0];
-                    } else {
-                        // Agar sirf ID dali ho
-                        fileId = input.split('/').pop().split(/[?#]/)[0];
-                    }
+                    // UNIVERSAL LOGIC: Yeh har domain se ID nikal lega
+                    let parts = val.split('/');
+                    let fileId = parts.pop() || parts.pop(); // Aakhri hissa uthayega
+                    if(fileId.includes('?')) fileId = fileId.split('?')[0];
 
-                    if(fileId.length < 5) return alert('Link sahi nahi hai, dobara check karo!');
-
-                    const playerUrl = window.location.origin + '/player/' + fileId;
-                    document.getElementById('videoPlayer').src = playerUrl;
-                    document.getElementById('player-container').style.display = 'block';
+                    // Agar link /e/ ya /d/ wala hai toh handle karega
+                    const finalLink = window.location.origin + '/player/' + fileId;
+                    document.getElementById('iframePlayer').src = finalLink;
+                    document.getElementById('v-player').style.display = 'block';
                 }
             </script>
         </body>
@@ -65,27 +51,27 @@ app.get('/', (req, res) => {
 });
 
 app.get('/player/:id', async (req, res) => {
-    const fileId = req.params.id;
+    const id = req.params.id;
     try {
-        const response = await axios.get(`https://doodapi.com/api/file/direct?key=${API_KEY}&file_code=${fileId}`);
-        if (response.data && response.data.result && response.data.result.url) {
-            const videoUrl = response.data.result.url;
+        // Doodstream API call
+        const apiRes = await axios.get(`https://doodapi.com/api/file/direct?key=${API_KEY}&file_code=${id}`);
+        
+        if (apiRes.data && apiRes.data.result) {
+            const directUrl = apiRes.data.result.url;
             res.send(`
                 <html>
-                <head><meta name="viewport" content="width=device-width, initial-scale=1"></head>
-                <body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;">
-                    <video controls autoplay style="width:100%;max-height:100vh;">
-                        <source src="${videoUrl}" type="video/mp4">
-                        Your browser does not support the video tag.
+                <body style="margin:0;background:#000;">
+                    <video controls autoplay style="width:100%;height:100vh;">
+                        <source src="${directUrl}" type="video/mp4">
                     </video>
                 </body>
                 </html>
             `);
         } else {
-            res.status(404).send("<body style='background:#000;color:white;text-align:center;padding:50px;'><h3>Video Error: File Not Found or API Key Issue</h3></body>");
+            res.send("<h3 style='color:white;text-align:center;'>API Error: ID galat hai ya key block hai.</h3>");
         }
-    } catch (e) {
-        res.status(500).send("Server Error");
+    } catch (err) {
+        res.send("<h3 style='color:white;text-align:center;'>Server Error</h3>");
     }
 });
 
